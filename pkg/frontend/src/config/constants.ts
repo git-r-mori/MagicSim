@@ -13,8 +13,8 @@ export const CANVAS = {
 
 /** カメラ（見下ろし 2.5D 用） */
 export const CAMERA = {
-  /** OrthographicCamera の zoom。大きいほどズームイン */
-  zoom: 20,
+  /** OrthographicCamera の zoom。大きいほどズームイン。画面いっぱいに表示 */
+  zoom: 100,
   near: 0.1,
   far: 500,
   /** 初期位置（ステージ中心を見下ろす） */
@@ -45,9 +45,22 @@ export const LIGHTS = {
 /** グリッド・ステージ（プロトタイプ用） */
 export const GRID = {
   tileSize: 1,
+  /** タイル間の見た目の隙間（グリッド線として背景が見える） */
+  tileGap: 0.06,
   /** 8x8 グリッド */
   cols: 8,
   rows: 8,
+} as const;
+
+/** マップ・タイル色（草原風） */
+export const MAP = {
+  /** 草原タイルの色（軽いバリエーションで自然な感じに） */
+  grasslandColors: [
+    "#4a7c59", // 濃いめの緑
+    "#5a9c69", // 標準の緑
+    "#3d6b47", // 深緑
+    "#6bb37a", // 明るい緑
+  ] as const,
 } as const;
 
 /** プレイヤー（WASD 用キーコード） */

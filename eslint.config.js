@@ -64,6 +64,7 @@ export default tseslint.config(
             "shadow-camera-top",
             "shadow-camera-bottom",
             "shadow-bias",
+            "side",
           ],
         },
       ],
