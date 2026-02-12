@@ -117,3 +117,25 @@ export const UI = {
     border: "1px solid rgba(100,100,150,0.5)",
   },
 } as const;
+
+/** デバッグウィンドウ */
+export const DEBUG_WINDOW = {
+  /** 画面右端に配置 */
+  right: 8,
+  top: 8,
+  minWidth: 200,
+  maxWidth: 320,
+  padding: "10px 14px",
+  fontSize: 12,
+  fontFamily: "monospace",
+  background: "rgba(20,20,35,0.95)",
+  color: "#b0b0c0",
+  border: "1px solid rgba(80,80,120,0.6)",
+  borderRadius: 6,
+  zIndex: 20,
+  lineHeight: 1.5,
+  /** セクション間の余白 */
+  sectionGap: 8,
+  /** エラーログ最大行数 */
+  maxErrorLines: 20,
+} as const;

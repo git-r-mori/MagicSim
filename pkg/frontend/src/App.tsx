@@ -1,3 +1,4 @@
+import { DebugWindow } from "./components/DebugWindow/DebugWindow";
 import { Scene } from "./components/Scene/Scene";
 import { UI } from "@/config/constants";
 
@@ -14,6 +15,7 @@ function App() {
       }}
     >
       <Scene />
+      <DebugWindow />
       <div
         style={{
           position: "fixed",

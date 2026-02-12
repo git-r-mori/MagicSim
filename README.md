@@ -63,6 +63,8 @@ MagicSim/
 │   └── frontend/               # React アプリ（Vite + R3F）
 │       └── src/
 │           ├── components/    # 3D シーン・UI コンポーネント
+│           │   ├── DebugWindow/  # デバッグ用パネル（入力キー・座標・エラーログ）
+│           │   └── Scene/        # ゲームシーン
 │           ├── config/        # 定数
 │           └── hooks/         # カスタムフック
 ├── e2e/                        # Playwright E2E テスト
