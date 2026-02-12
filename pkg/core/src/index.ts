@@ -37,9 +37,18 @@ export function isTileBlocked(pos: GridPosition, blockedTiles: readonly GridPosi
   return blockedTiles.some((b) => b.col === pos.col && b.row === pos.row);
 }
 
+/** 炎魔法弾の着弾結果 */
+export interface FireProjectileEndResult {
+  /** 着弾位置（木箱に当たった場合は木箱のタイル） */
+  end: GridPosition;
+  /** 木箱に当たった場合、その木箱の座標。当たっていなければ null */
+  hitCrate: GridPosition | null;
+}
+
 /**
  * 炎魔法弾の着弾位置を算出。
  * 発射位置から指定方向へ進み、木箱・境界に当たるか maxTiles に達するまで進む。
+ * 木箱に当たった場合はそのタイルで止まり、hitCrate に座標を返す（焼失対象）。
  */
 export function getFireProjectileEndPosition(
   start: GridPosition,
@@ -48,15 +57,19 @@ export function getFireProjectileEndPosition(
   cols: number,
   rows: number,
   maxTiles: number
-): GridPosition {
+): FireProjectileEndResult {
   let current = { ...start };
   for (let step = 0; step < maxTiles; step++) {
     const next = moveGridPosition(current, direction, cols, rows);
-    if (next.col === current.col && next.row === current.row) return current;
-    if (isTileBlocked(next, blockedTiles)) return current;
+    if (next.col === current.col && next.row === current.row) {
+      return { end: current, hitCrate: null };
+    }
+    if (isTileBlocked(next, blockedTiles)) {
+      return { end: next, hitCrate: next };
+    }
     current = next;
   }
-  return current;
+  return { end: current, hitCrate: null };
 }
 
 /** tryMoveWithPush の戻り値 */

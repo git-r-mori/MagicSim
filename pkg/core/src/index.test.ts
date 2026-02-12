@@ -188,7 +188,7 @@ describe("getFireProjectileEndPosition", () => {
 
   it("空きタイルのみの場合 maxTiles まで進む", () => {
     const crates: { col: number; row: number }[] = [];
-    const end = getFireProjectileEndPosition(
+    const result = getFireProjectileEndPosition(
       { col: 3, row: 3 },
       "n",
       crates,
@@ -196,12 +196,13 @@ describe("getFireProjectileEndPosition", () => {
       ROWS,
       MAX_TILES
     );
-    expect(end).toEqual({ col: 3, row: 0 });
+    expect(result.end).toEqual({ col: 3, row: 0 });
+    expect(result.hitCrate).toBeNull();
   });
 
-  it("木箱に当たるとその手前で止まる", () => {
+  it("木箱に当たると木箱のタイルで止まり hitCrate を返す", () => {
     const crates = [{ col: 3, row: 1 }];
-    const end = getFireProjectileEndPosition(
+    const result = getFireProjectileEndPosition(
       { col: 3, row: 3 },
       "n",
       crates,
@@ -209,12 +210,13 @@ describe("getFireProjectileEndPosition", () => {
       ROWS,
       MAX_TILES
     );
-    expect(end).toEqual({ col: 3, row: 2 });
+    expect(result.end).toEqual({ col: 3, row: 1 });
+    expect(result.hitCrate).toEqual({ col: 3, row: 1 });
   });
 
-  it("直進方向の1タイル先に木箱がある場合は発射位置のまま", () => {
+  it("直進方向の1タイル先に木箱がある場合は木箱に当たる", () => {
     const crates = [{ col: 3, row: 2 }];
-    const end = getFireProjectileEndPosition(
+    const result = getFireProjectileEndPosition(
       { col: 3, row: 3 },
       "n",
       crates,
@@ -222,12 +224,13 @@ describe("getFireProjectileEndPosition", () => {
       ROWS,
       MAX_TILES
     );
-    expect(end).toEqual({ col: 3, row: 3 });
+    expect(result.end).toEqual({ col: 3, row: 2 });
+    expect(result.hitCrate).toEqual({ col: 3, row: 2 });
   });
 
   it("境界で止まる", () => {
     const crates: { col: number; row: number }[] = [];
-    const end = getFireProjectileEndPosition(
+    const result = getFireProjectileEndPosition(
       { col: 0, row: 2 },
       "w",
       crates,
@@ -235,13 +238,15 @@ describe("getFireProjectileEndPosition", () => {
       ROWS,
       MAX_TILES
     );
-    expect(end).toEqual({ col: 0, row: 2 });
+    expect(result.end).toEqual({ col: 0, row: 2 });
+    expect(result.hitCrate).toBeNull();
   });
 
   it("maxTiles が 0 なら発射位置のまま", () => {
     const crates: { col: number; row: number }[] = [];
-    const end = getFireProjectileEndPosition({ col: 4, row: 4 }, "e", crates, COLS, ROWS, 0);
-    expect(end).toEqual({ col: 4, row: 4 });
+    const result = getFireProjectileEndPosition({ col: 4, row: 4 }, "e", crates, COLS, ROWS, 0);
+    expect(result.end).toEqual({ col: 4, row: 4 });
+    expect(result.hitCrate).toBeNull();
   });
 });
 

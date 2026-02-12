@@ -24,9 +24,32 @@ function gridToWorld(col: number, row: number): [number, number, number] {
  * 木箱オブジェクトは押して移動可能。侵入不可。
  * プレイヤー（WASD で移動）を配置。
  */
+/** 燃焼進行度(0-1)からスケールを算出。終盤で急に小さくなる */
+function burnScale(progress: number): number {
+  const eased = 1 - (1 - progress) ** 2;
+  return Math.max(0, 1 - eased);
+}
+
+/** 燃焼進行度から色を補間。木色→炎色(オレンジ)→焦げ色 */
+function burnColor(progress: number): string {
+  if (progress < 0.35) {
+    const t = progress / 0.35;
+    const r = Math.round(0x8b + (0xff - 0x8b) * t);
+    const g = Math.round(0x69 + (0x66 - 0x69) * t);
+    const b = Math.round(0x14 - 0x14 * t);
+    return `rgb(${r},${g},${b})`;
+  }
+  const t = (progress - 0.35) / 0.65;
+  const r = Math.round(0xff + (0x1a - 0xff) * t);
+  const g = Math.round(0x66 + (0x0a - 0x66) * t);
+  const b = Math.round(0x00);
+  return `rgb(${r},${g},${b})`;
+}
+
 export function GameWorld() {
   const movement = usePlayerMovement();
-  const { displayPosition, displayRotationY, displayCratePositions } = movement;
+  const { displayPosition, displayRotationY, displayCratePositions, displayBurningCrates } =
+    movement;
   const { projectiles } = useFireMagic(() => ({
     position: movement.position,
     facing: movement.facing,
@@ -69,6 +92,26 @@ export function GameWorld() {
             </mesh>
             <lineSegments geometry={CRATE_EDGES}>
               <lineBasicMaterial color={edgeColor} />
+            </lineSegments>
+          </group>
+        );
+      })}
+      {displayBurningCrates.map(({ col, row, progress }, i) => {
+        const [x, , z] = gridToWorld(col, row);
+        const { height } = MAP.crate;
+        const scale = burnScale(progress);
+        const color = burnColor(progress);
+        return (
+          <group
+            key={`burning-${col}-${row}-${i}`}
+            position={[x, height / 2, z]}
+            scale={[scale, scale, scale]}
+          >
+            <mesh geometry={CRATE_BOX}>
+              <meshBasicMaterial color={color} />
+            </mesh>
+            <lineSegments geometry={CRATE_EDGES}>
+              <lineBasicMaterial color={MAP.crate.burnEdgeColor} />
             </lineSegments>
           </group>
         );

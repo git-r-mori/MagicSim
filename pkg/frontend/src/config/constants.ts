@@ -68,6 +68,13 @@ export const MAP = {
     edgeColor: "#5c4710",
     height: 0.8,
     size: 0.7,
+    /** 燃焼時の色（炎色→焦げ色） */
+    burnColor: "#1a0a00",
+    burnEdgeColor: "#0d0500",
+  } as const,
+  /** 木箱燃焼アニメーション（炎魔法で被弾時） */
+  crateBurn: {
+    durationMs: 500,
   } as const,
   /** 草原タイルの色（軽いバリエーションで自然な感じに） */
   grasslandColors: [

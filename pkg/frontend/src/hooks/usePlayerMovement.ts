@@ -32,12 +32,21 @@ export interface DisplayPosition {
   row: number;
 }
 
+export interface BurningCrateDisplay {
+  col: number;
+  row: number;
+  /** 0〜1。1で消滅 */
+  progress: number;
+}
+
 export interface PlayerMovementDisplayState {
   displayPosition: DisplayPosition;
   displayFacing: GridDirection;
   /** 表示用 Y 軸回転（rad）。アニメーション中は補間される */
   displayRotationY: number;
   displayCratePositions: DisplayPosition[];
+  /** 燃焼中の木箱（炎魔法で被弾後、消失アニメーション中） */
+  displayBurningCrates: BurningCrateDisplay[];
 }
 
 const INITIAL_CRATE_POSITIONS: CratePosition[] = MAP.cratePositions.map((p) => ({ ...p }));
@@ -61,9 +70,11 @@ const INITIAL_DISPLAY: PlayerMovementDisplayState = {
   displayFacing: PLAYER.initialFacing,
   displayRotationY: DIRECTION_TO_Y_RAD[PLAYER.initialFacing],
   displayCratePositions: INITIAL_CRATE_POSITIONS.map((p) => ({ ...p })),
+  displayBurningCrates: [],
 };
 
 export const MAP_RESET_EVENT = "magicsim:reset-map";
+export const CRATE_DESTROYED_EVENT = "magicsim:crate-destroyed";
 
 /** マップリセットを発火。全 usePlayerMovement インスタンスがリセットされる */
 export function dispatchMapReset(): void {
@@ -114,7 +125,10 @@ export function usePlayerMovement(): PlayerMovementState & PlayerMovementDisplay
     displayFacing: PLAYER.initialFacing,
     displayRotationY: DIRECTION_TO_Y_RAD[PLAYER.initialFacing],
     displayCratePositions: INITIAL_CRATE_POSITIONS.map((p) => ({ ...p })),
+    displayBurningCrates: [],
   }));
+
+  const burningCratesRef = useRef<Array<{ col: number; row: number; burnStartedAt: number }>>([]);
 
   const animRef = useRef<{
     from: Pick<PlayerMovementState, "position" | "facing" | "cratePositions">;
@@ -127,14 +141,17 @@ export function usePlayerMovement(): PlayerMovementState & PlayerMovementDisplay
 
   const performReset = useCallback(() => {
     animRef.current = null;
+    burningCratesRef.current = [];
     setState({
       ...INITIAL_STATE,
       cratePositions: INITIAL_CRATE_POSITIONS.map((p) => ({ ...p })),
     });
-    setDisplay({
+    setDisplay((prev) => ({
+      ...prev,
       ...INITIAL_DISPLAY,
       displayCratePositions: INITIAL_CRATE_POSITIONS.map((p) => ({ ...p })),
-    });
+      displayBurningCrates: [],
+    }));
   }, []);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -178,6 +195,24 @@ export function usePlayerMovement(): PlayerMovementState & PlayerMovementDisplay
   }, [performReset]);
 
   useEffect(() => {
+    const handler = (e: Event) => {
+      const { col, row } = (e as CustomEvent<{ col: number; row: number }>).detail;
+      const now = performance.now();
+      burningCratesRef.current = [...burningCratesRef.current, { col, row, burnStartedAt: now }];
+      setDisplay((prev) => ({
+        ...prev,
+        displayBurningCrates: [...prev.displayBurningCrates, { col, row, progress: 0 }],
+      }));
+      setState((prev) => ({
+        ...prev,
+        cratePositions: prev.cratePositions.filter((c) => !(c.col === col && c.row === row)),
+      }));
+    };
+    window.addEventListener(CRATE_DESTROYED_EVENT, handler);
+    return () => window.removeEventListener(CRATE_DESTROYED_EVENT, handler);
+  }, []);
+
+  useEffect(() => {
     const from = displayRef.current;
     const samePos =
       state.position.col === from.displayPosition.col &&
@@ -190,6 +225,18 @@ export function usePlayerMovement(): PlayerMovementState & PlayerMovementDisplay
           c.row === from.displayCratePositions[i]?.row
       );
     if (samePos && sameCrates) return;
+
+    if (state.cratePositions.length !== from.displayCratePositions.length) {
+      animRef.current = null;
+      setDisplay({
+        displayPosition: { ...state.position },
+        displayFacing: state.facing,
+        displayRotationY: DIRECTION_TO_Y_RAD[state.facing],
+        displayCratePositions: state.cratePositions.map((p) => ({ ...p })),
+        displayBurningCrates: from.displayBurningCrates,
+      });
+      return;
+    }
 
     if (
       animRef.current &&
@@ -218,14 +265,38 @@ export function usePlayerMovement(): PlayerMovementState & PlayerMovementDisplay
   }, [state]);
 
   useEffect(() => {
+    const BURN_DURATION = MAP.crateBurn.durationMs;
     let raf: number;
     const tick = () => {
+      const now = performance.now();
+      const prev = displayRef.current;
+
+      let displayBurningCrates = prev.displayBurningCrates;
+      const burning = burningCratesRef.current;
+      if (burning.length > 0) {
+        const next: BurningCrateDisplay[] = [];
+        const stillBurning: typeof burning = [];
+        for (const b of burning) {
+          const progress = Math.min(1, (now - b.burnStartedAt) / BURN_DURATION);
+          if (progress < 1) {
+            next.push({ col: b.col, row: b.row, progress });
+            stillBurning.push(b);
+          }
+        }
+        burningCratesRef.current = stillBurning;
+        displayBurningCrates = next;
+      } else {
+        displayBurningCrates = [];
+      }
+
       const anim = animRef.current;
       if (!anim) {
+        setDisplay((p) => ({ ...p, displayBurningCrates }));
         raf = requestAnimationFrame(tick);
         return;
       }
-      const elapsed = performance.now() - anim.startTime;
+
+      const elapsed = now - anim.startTime;
       const t = Math.min(1, elapsed / MOVE_ANIMATION.durationMs);
       const eased = easeOutCubic(t);
 
@@ -242,6 +313,7 @@ export function usePlayerMovement(): PlayerMovementState & PlayerMovementDisplay
         displayCratePositions: anim.from.cratePositions.map((c, i) =>
           lerpPosition(c, anim.to.cratePositions[i] ?? c, eased)
         ),
+        displayBurningCrates,
       });
 
       if (t >= 1) {
@@ -259,5 +331,6 @@ export function usePlayerMovement(): PlayerMovementState & PlayerMovementDisplay
     displayFacing: display.displayFacing,
     displayRotationY: display.displayRotationY,
     displayCratePositions: display.displayCratePositions,
+    displayBurningCrates: display.displayBurningCrates,
   };
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { usePlayerMovement } from "./usePlayerMovement";
+import { usePlayerMovement, CRATE_DESTROYED_EVENT } from "./usePlayerMovement";
 import { MAP, PLAYER } from "@/config/constants";
 
 describe("usePlayerMovement", () => {
@@ -55,6 +55,27 @@ describe("usePlayerMovement", () => {
       window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
     });
     expect(result.current.facing).toBe("e");
+  });
+
+  it("炎魔法で木箱に当たると木箱が焼失する（CRATE_DESTROYED_EVENT）", () => {
+    const crateAt4_3 = MAP.cratePositions.some((p) => p.col === 4 && p.row === 3);
+    if (!crateAt4_3) {
+      throw new Error("テスト前提: MAP.cratePositions に (4,3) が含まれていること");
+    }
+
+    const { result } = renderHook(() => usePlayerMovement());
+    expect(result.current.cratePositions.some((c) => c.col === 4 && c.row === 3)).toBe(true);
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent(CRATE_DESTROYED_EVENT, {
+          detail: { col: 4, row: 3 },
+        })
+      );
+    });
+
+    expect(result.current.cratePositions.some((c) => c.col === 4 && c.row === 3)).toBe(false);
+    expect(result.current.cratePositions).toHaveLength(MAP.cratePositions.length - 1);
   });
 
   it("ESC でマップ状態が初期化される", () => {

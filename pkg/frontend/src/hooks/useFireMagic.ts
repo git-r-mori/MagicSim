@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getFireProjectileEndPosition, type GridDirection } from "@magicsim/core";
 import { GRID, FIRE_MAGIC } from "@/config/constants";
-import { MAP_RESET_EVENT } from "./usePlayerMovement";
+import { CRATE_DESTROYED_EVENT, MAP_RESET_EVENT } from "./usePlayerMovement";
 
 const FIRE_REQUEST_EVENT = "magicsim:fire-request";
 
@@ -16,6 +16,8 @@ export interface FireProjectileState {
   startRow: number;
   endCol: number;
   endRow: number;
+  /** 木箱に当たった場合、焼失対象の座標 */
+  hitCrate: { col: number; row: number } | null;
   createdAt: number;
 }
 
@@ -57,7 +59,7 @@ export function useFireMagic(getState: () => FireMagicState) {
 
   const handleFireRequest = useCallback(() => {
     const { position, facing, cratePositions } = getStateRef.current();
-    const end = getFireProjectileEndPosition(
+    const { end, hitCrate } = getFireProjectileEndPosition(
       position,
       facing,
       cratePositions,
@@ -78,6 +80,7 @@ export function useFireMagic(getState: () => FireMagicState) {
         startRow: position.row,
         endCol: end.col,
         endRow: end.row,
+        hitCrate: hitCrate ? { col: hitCrate.col, row: hitCrate.row } : null,
         createdAt,
       },
     ]);
@@ -105,6 +108,15 @@ export function useFireMagic(getState: () => FireMagicState) {
       const current = projectilesRef.current;
       const toRemove = current.filter((p) => now - p.createdAt >= FIRE_MAGIC.durationMs);
       if (toRemove.length > 0) {
+        toRemove.forEach((p) => {
+          if (p.hitCrate) {
+            window.dispatchEvent(
+              new CustomEvent(CRATE_DESTROYED_EVENT, {
+                detail: { col: p.hitCrate.col, row: p.hitCrate.row },
+              })
+            );
+          }
+        });
         setProjectiles((prev) => prev.filter((p) => !toRemove.some((r) => r.id === p.id)));
       } else {
         setTick((t) => t + 1);
