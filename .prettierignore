@@ -1,0 +1,9 @@
+node_modules
+dist
+.sst
+test-results
+playwright-report
+*.lock
+package-lock.json
+*.min.js
+*.min.css

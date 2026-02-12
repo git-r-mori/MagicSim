@@ -1,0 +1,84 @@
+---
+description: MagicSim 2.5D 箱庭パズル - エージェント向け統合ルール
+alwaysApply: true
+---
+
+# MagicSim エージェント向けルール
+
+## 0. バグ修正：再現確認（必須・最優先）
+
+**バグ修正タスク**（fix・不具合・bug 等）を受け取った場合：
+
+1. **コード修正を一切行わない**。まず本ルール全文を読み直す
+2. **再現確認**: Playwright（E2E）または Vitest（ロジック単位）で事象を再現する
+3. **再現できない場合**: ユーザーへ再現手順・期待 vs 実際・エラーログを確認し、修正に着手しない
+4. 再現確認後に修正する
+
+**推奨**: 「バグ修正：」「再現確認から」を含めるとルール遵守が確実になる
+
+---
+
+## 1. タスク実行フロー
+
+### 1.1 実装計画
+- タスク分解・手順整理。依存関係・影響範囲を洗い出す
+- 要件が曖昧な場合は確認してから着手
+- 必要に応じて `TodoWrite` で管理
+
+### 1.2 実装
+- 計画に従い、本ルールの規約・パターンに準拠する
+- `pkg/core` のロジック追加時は `*.test.ts` を colocation で実装
+- ゲーム仕様は [docs/game-specification.md](docs/game-specification.md) を参照
+
+### 1.3 レビュー・検証
+- `npm run typecheck` → `npm run test` → `npm run lint` → `npm run format:check` の順で実施
+- 型安全性・規約準拠・可読性・DRY・エラー処理を確認
+- 新規ファイル・ディレクトリ変更時は `README.md` を更新
+- 修正後は再検証する
+
+### 1.4 完了
+- 検証通過を最終確認
+- Conventional Commits でコミット
+
+---
+
+## 2. プロジェクト規約
+
+- **言語**: 応答は日本語
+- **実装方針**: シンプルを優先。複雑不可避の場合は確認し、コメントで概要を残す。仕様は適宜変更可（[game-specification.md](docs/game-specification.md)）
+- **Lint/Format**: `npm run lint`、`npm run format:check` をパスする
+- **型**: TypeScript `strict`、`any` は避ける
+- **マジックナンバー**: `config/constants.ts` 等で名前付き定数化
+- **モノレポ**: `pkg/core`（共有ロジック）、`pkg/frontend`（React アプリ）
+- **README**: 構成変更・機能追加時に最新化
+
+**テスト**
+- Vitest（colocation: `*.test.ts` / `*.test.tsx`）
+- 対象: `pkg/core` 優先、frontend hooks/ユーティリティは必要に応じて
+- カバレッジ: pkg/core で 80% 以上（pre-commit で検証）
+- テスト内の数値は constants または export 参照
+
+---
+
+## 3. コミット
+
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- 英語のみ、簡潔な1行（PowerShell 等の文字化け防止）
+
+---
+
+## 4. React パターン（`.tsx`）
+
+- 関数コンポーネント（`function` またはアロー関数）
+- 再利用ロジックはカスタムフックで抽出（例: `usePlayerKeyboard`）
+- R3F は `@react-three/fiber` の慣例に従う
+- スタイル: CSS modules または styled-components を検討
+
+---
+
+## 5. TypeScript 規約（`.ts`）
+
+- 空の `catch` は避け、ログ出力と再スロー
+- 未使用変数は `_` プレフィックス
+- 不要な import は削除
+- 公開 API は明示的に `export`

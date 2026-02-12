@@ -1,0 +1,17 @@
+node_modules
+dist
+.sst
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+
+# Vitest カバレッジ出力
+coverage/
+
+# Playwright テスト結果（スクリーンショット・動画等）
+test-results/
+playwright-report/
+pkg/test-*.png
+pkg/test-results/

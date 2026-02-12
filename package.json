@@ -1,0 +1,59 @@
+{
+  "name": "magicsim",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "pkg/core",
+    "pkg/frontend"
+  ],
+  "overrides": {
+    "hono": "^4.11.7",
+    "@modelcontextprotocol/sdk": "^1.26.0"
+  },
+  "scripts": {
+    "dev": "npm run dev -w @magicsim/frontend",
+    "build": "npm run build -w pkg/frontend",
+    "preview": "vite preview --cwd pkg/frontend",
+    "deploy": "sst deploy",
+    "core:build": "npm run build -w pkg/core",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck -w pkg/core && npm run typecheck -w pkg/frontend",
+    "prepare": "husky",
+    "test": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@eslint/js": "^9.15.0",
+    "@playwright/test": "^1.58.2",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@vitest/coverage-v8": "^4.0.18",
+    "eslint": "^9.15.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "globals": "^15.12.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
+    "sst": "^3.4.0",
+    "typescript-eslint": "^8.15.0",
+    "vitest": "^4.0.18"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,html,yaml,yml}": [
+      "prettier --write"
+    ]
+  }
+}
