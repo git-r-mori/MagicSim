@@ -56,4 +56,30 @@ describe("usePlayerMovement", () => {
     });
     expect(result.current.facing).toBe("e");
   });
+
+  it("ESC でマップ状態が初期化される", () => {
+    const { result } = renderHook(() => usePlayerMovement());
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
+    });
+    expect(result.current.position).not.toEqual({
+      col: PLAYER.initialCol,
+      row: PLAYER.initialRow,
+    });
+    const crateBeforeReset = result.current.cratePositions.find((p) => p.col === 5 && p.row === 3);
+    expect(crateBeforeReset).toBeDefined();
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { code: "Escape" }));
+    });
+
+    expect(result.current.position).toEqual({
+      col: PLAYER.initialCol,
+      row: PLAYER.initialRow,
+    });
+    expect(result.current.facing).toBe(PLAYER.initialFacing);
+    expect(result.current.cratePositions).toHaveLength(MAP.cratePositions.length);
+    const crateAt4_3 = result.current.cratePositions.some((p) => p.col === 4 && p.row === 3);
+    expect(crateAt4_3).toBe(true);
+  });
 });

@@ -3,7 +3,7 @@ import { DEBUG_WINDOW } from "@/config/constants";
 import { useDebugKeys } from "@/hooks/useDebugKeys";
 import { useDebugMouse } from "@/hooks/useDebugMouse";
 import { useErrorLog } from "@/hooks/useErrorLog";
-import { usePlayerMovement } from "@/hooks/usePlayerMovement";
+import { dispatchMapReset, usePlayerMovement } from "@/hooks/usePlayerMovement";
 
 /** エラーログをクリップボードにコピーしてトースト表示 */
 function copyErrorLogsToClipboard(logs: { timestamp: string; message: string; stack?: string }[]) {
@@ -64,6 +64,22 @@ export function DebugWindow() {
         <div>
           col={position.col}, row={position.row}, facing={facing}
         </div>
+        <button
+          type="button"
+          onClick={() => dispatchMapReset()}
+          style={{
+            marginTop: 6,
+            padding: "2px 8px",
+            fontSize: 10,
+            cursor: "pointer",
+            background: "rgba(80,80,100,0.5)",
+            border: "1px solid rgba(120,120,150,0.6)",
+            borderRadius: 4,
+            color: "#c0c0e0",
+          }}
+        >
+          マップリセット
+        </button>
       </div>
 
       <div>
