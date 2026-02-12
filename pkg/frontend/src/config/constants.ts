@@ -99,6 +99,8 @@ export const PLAYER = {
   color: "#e8d5a3",
   /** キャラクタの高さ（タイル上面からのオフセット） */
   height: 0.5,
+  /** 初期向き（n/s/e/w） */
+  initialFacing: "s" as const,
 } as const;
 
 /** UI */

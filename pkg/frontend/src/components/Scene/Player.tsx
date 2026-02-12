@@ -11,17 +11,25 @@ function gridToWorld(col: number, row: number): [number, number, number] {
   return [x, y, z];
 }
 
-/** プレイヤーキャラクタ。WASD でタイル単位に移動。木箱を押して動かせる。 */
-export function Player({ position }: { position: DisplayPosition }) {
+/** プレイヤーキャラクタ。WASD でタイル単位に移動。木箱を押して動かせる。向きは移動方向に追従。 */
+export function Player({ position, rotationY }: { position: DisplayPosition; rotationY: number }) {
   const { col, row } = position;
   const [x, y, z] = gridToWorld(col, row);
 
-  const size = 0.4; // タイル内に収まるサイズ
+  const width = 0.35;
+  const depth = 0.5; // 前後方向に長めにして向きを視覚化
 
   return (
-    <mesh position={[x, y, z]}>
-      <boxGeometry args={[size, PLAYER.height, size]} />
-      <meshBasicMaterial color={PLAYER.color} />
-    </mesh>
+    <group position={[x, y, z]} rotation={[0, rotationY, 0]}>
+      <mesh>
+        <boxGeometry args={[width, PLAYER.height, depth]} />
+        <meshBasicMaterial color={PLAYER.color} />
+      </mesh>
+      {/* 正面の目印（向きが一目で分かる） */}
+      <mesh position={[0, 0, depth / 2 + 0.08]}>
+        <sphereGeometry args={[0.06, 8, 6]} />
+        <meshBasicMaterial color="#c4a574" />
+      </mesh>
+    </group>
   );
 }

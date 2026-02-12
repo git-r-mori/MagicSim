@@ -22,6 +22,7 @@ export interface CratePosition {
 
 export interface PlayerMovementState {
   position: PlayerPosition;
+  facing: GridDirection;
   cratePositions: CratePosition[];
 }
 
@@ -33,6 +34,9 @@ export interface DisplayPosition {
 
 export interface PlayerMovementDisplayState {
   displayPosition: DisplayPosition;
+  displayFacing: GridDirection;
+  /** 表示用 Y 軸回転（rad）。アニメーション中は補間される */
+  displayRotationY: number;
   displayCratePositions: DisplayPosition[];
 }
 
@@ -54,6 +58,22 @@ function lerpPosition(
   };
 }
 
+/** GridDirection を Y軸回転（rad）に変換。南を基準0。 */
+const DIRECTION_TO_Y_RAD: Record<GridDirection, number> = {
+  s: 0,
+  n: Math.PI,
+  e: Math.PI / 2,
+  w: -Math.PI / 2,
+};
+
+/** 角度を最短経路で補間 */
+function lerpAngle(fromRad: number, toRad: number, t: number): number {
+  let diff = toRad - fromRad;
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  return fromRad + diff * t;
+}
+
 /**
  * プレイヤー位置と木箱配置を管理。WASD でタイル単位に移動。
  * 木箱タイルに進入する場合、押せるならプレイヤーと箱を同時移動。
@@ -65,17 +85,20 @@ export function usePlayerMovement(): PlayerMovementState & PlayerMovementDisplay
       col: PLAYER.initialCol,
       row: PLAYER.initialRow,
     },
+    facing: PLAYER.initialFacing,
     cratePositions: INITIAL_CRATE_POSITIONS,
   });
 
   const [display, setDisplay] = useState<PlayerMovementDisplayState>(() => ({
     displayPosition: { col: PLAYER.initialCol, row: PLAYER.initialRow },
+    displayFacing: PLAYER.initialFacing,
+    displayRotationY: DIRECTION_TO_Y_RAD[PLAYER.initialFacing],
     displayCratePositions: INITIAL_CRATE_POSITIONS.map((p) => ({ ...p })),
   }));
 
   const animRef = useRef<{
-    from: PlayerMovementState;
-    to: PlayerMovementState;
+    from: Pick<PlayerMovementState, "position" | "facing" | "cratePositions">;
+    to: Pick<PlayerMovementState, "position" | "facing" | "cratePositions">;
     startTime: number;
   } | null>(null);
 
@@ -99,6 +122,7 @@ export function usePlayerMovement(): PlayerMovementState & PlayerMovementDisplay
       if (!result.success) return prev;
       return {
         position: result.newPlayerPos,
+        facing: direction,
         cratePositions: result.newCratePositions,
       };
     });
@@ -138,10 +162,12 @@ export function usePlayerMovement(): PlayerMovementState & PlayerMovementDisplay
     animRef.current = {
       from: {
         position: { ...displayRef.current.displayPosition },
+        facing: displayRef.current.displayFacing,
         cratePositions: displayRef.current.displayCratePositions.map((p) => ({ ...p })),
       },
       to: {
         position: { ...state.position },
+        facing: state.facing,
         cratePositions: state.cratePositions.map((p) => ({ ...p })),
       },
       startTime: performance.now(),
@@ -160,8 +186,16 @@ export function usePlayerMovement(): PlayerMovementState & PlayerMovementDisplay
       const t = Math.min(1, elapsed / MOVE_ANIMATION.durationMs);
       const eased = easeOutCubic(t);
 
+      const displayRotationY = lerpAngle(
+        DIRECTION_TO_Y_RAD[anim.from.facing],
+        DIRECTION_TO_Y_RAD[anim.to.facing],
+        eased
+      );
+
       setDisplay({
         displayPosition: lerpPosition(anim.from.position, anim.to.position, eased),
+        displayFacing: anim.to.facing,
+        displayRotationY,
         displayCratePositions: anim.from.cratePositions.map((c, i) =>
           lerpPosition(c, anim.to.cratePositions[i] ?? c, eased)
         ),
@@ -179,6 +213,8 @@ export function usePlayerMovement(): PlayerMovementState & PlayerMovementDisplay
   return {
     ...state,
     displayPosition: display.displayPosition,
+    displayFacing: display.displayFacing,
+    displayRotationY: display.displayRotationY,
     displayCratePositions: display.displayCratePositions,
   };
 }

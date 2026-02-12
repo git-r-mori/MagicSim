@@ -10,6 +10,7 @@ describe("usePlayerMovement", () => {
       col: PLAYER.initialCol,
       row: PLAYER.initialRow,
     });
+    expect(result.current.facing).toBe(PLAYER.initialFacing);
     expect(result.current.cratePositions).toHaveLength(MAP.cratePositions.length);
   });
 
@@ -39,5 +40,20 @@ describe("usePlayerMovement", () => {
       window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyW" }));
     });
     expect(result.current.position).toEqual({ col: 3, row: 2 });
+  });
+
+  it("移動すると向きが移動方向に変わる", () => {
+    const { result } = renderHook(() => usePlayerMovement());
+    expect(result.current.facing).toBe(PLAYER.initialFacing);
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyW" }));
+    });
+    expect(result.current.facing).toBe("n");
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
+    });
+    expect(result.current.facing).toBe("e");
   });
 });

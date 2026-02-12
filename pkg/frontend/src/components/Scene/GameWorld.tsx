@@ -23,7 +23,7 @@ function gridToWorld(col: number, row: number): [number, number, number] {
  * プレイヤー（WASD で移動）を配置。
  */
 export function GameWorld() {
-  const { displayPosition, displayCratePositions } = usePlayerMovement();
+  const { displayPosition, displayRotationY, displayCratePositions } = usePlayerMovement();
 
   const tiles: { col: number; row: number }[] = [];
   for (let row = 0; row < GRID.rows; row++) {
@@ -34,7 +34,7 @@ export function GameWorld() {
 
   return (
     <group>
-      <Player position={displayPosition} />
+      <Player position={displayPosition} rotationY={displayRotationY} />
       {tiles.map(({ col, row }) => {
         const colorIndex = (row + col) % MAP.grasslandColors.length;
         const color = MAP.grasslandColors[colorIndex];
