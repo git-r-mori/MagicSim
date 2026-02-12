@@ -3,6 +3,7 @@ import {
   FireMagicSystem,
   WaterMagicSystem,
   MagicFactory,
+  moveGridPosition,
   type StatusEffect,
   type MagicType,
 } from "./index";
@@ -101,5 +102,57 @@ describe("MagicFactory.createParams", () => {
     expect(params.power).toBe(2);
     expect(params.color).toBe("#ff0000");
     expect(params.behavior).toEqual({ custom: true });
+  });
+});
+
+describe("moveGridPosition", () => {
+  const COLS = 8;
+  const ROWS = 8;
+
+  it("n で row が1減る", () => {
+    expect(moveGridPosition({ col: 4, row: 4 }, "n", COLS, ROWS)).toEqual({
+      col: 4,
+      row: 3,
+    });
+  });
+
+  it("s で row が1増える", () => {
+    expect(moveGridPosition({ col: 4, row: 4 }, "s", COLS, ROWS)).toEqual({
+      col: 4,
+      row: 5,
+    });
+  });
+
+  it("e で col が1増える", () => {
+    expect(moveGridPosition({ col: 4, row: 4 }, "e", COLS, ROWS)).toEqual({
+      col: 5,
+      row: 4,
+    });
+  });
+
+  it("w で col が1減る", () => {
+    expect(moveGridPosition({ col: 4, row: 4 }, "w", COLS, ROWS)).toEqual({
+      col: 3,
+      row: 4,
+    });
+  });
+
+  it("境界でそれ以上は動かない", () => {
+    expect(moveGridPosition({ col: 0, row: 0 }, "w", COLS, ROWS)).toEqual({
+      col: 0,
+      row: 0,
+    });
+    expect(moveGridPosition({ col: 0, row: 0 }, "n", COLS, ROWS)).toEqual({
+      col: 0,
+      row: 0,
+    });
+    expect(moveGridPosition({ col: 7, row: 7 }, "e", COLS, ROWS)).toEqual({
+      col: 7,
+      row: 7,
+    });
+    expect(moveGridPosition({ col: 7, row: 7 }, "s", COLS, ROWS)).toEqual({
+      col: 7,
+      row: 7,
+    });
   });
 });

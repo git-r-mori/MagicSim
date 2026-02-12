@@ -28,7 +28,7 @@ function App() {
           border: UI.helpPanel.border,
         }}
       >
-        <div>WASD: 移動（準備中）</div>
+        <div>WASD: 移動</div>
         <div>タイルクリック: 炎魔法（準備中）</div>
       </div>
     </div>

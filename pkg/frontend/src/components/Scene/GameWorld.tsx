@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import { GRID, MAP } from "@/config/constants";
+import { Player } from "./Player";
 
 /**
  * 8×8 草原風マップ。
  * タイルごとに色を少し変えて自然な草地表現にする。
  * MeshBasicMaterial で照明不要・確実に可視。
+ * プレイヤー（WASD で移動）を配置。
  */
 export function GameWorld() {
   const tiles: { col: number; row: number }[] = [];
@@ -19,6 +21,7 @@ export function GameWorld() {
 
   return (
     <group>
+      <Player />
       {tiles.map(({ col, row }) => {
         const colorIndex = (row + col) % MAP.grasslandColors.length;
         const color = MAP.grasslandColors[colorIndex];

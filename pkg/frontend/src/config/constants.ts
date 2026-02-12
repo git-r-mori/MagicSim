@@ -63,7 +63,7 @@ export const MAP = {
   ] as const,
 } as const;
 
-/** プレイヤー（WASD 用キーコード） */
+/** プレイヤー（WASD 用キーコード・配置・見た目） */
 export const PLAYER = {
   keys: {
     w: "KeyW",
@@ -72,6 +72,13 @@ export const PLAYER = {
     d: "KeyD",
     space: "Space",
   } as const,
+  /** 初期グリッド位置（col, row） */
+  initialCol: 3,
+  initialRow: 3,
+  /** キャラクタ表示（草原上で視認しやすい色） */
+  color: "#e8d5a3",
+  /** キャラクタの高さ（タイル上面からのオフセット） */
+  height: 0.5,
 } as const;
 
 /** UI */

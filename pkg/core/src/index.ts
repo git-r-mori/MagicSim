@@ -5,6 +5,34 @@
  */
 
 // ---------------------------------------------------------------------------
+// グリッド・プレイヤー移動
+// ---------------------------------------------------------------------------
+
+/** グリッド上の移動方向（WASD に対応） */
+export type GridDirection = "n" | "s" | "e" | "w";
+
+export interface GridPosition {
+  col: number;
+  row: number;
+}
+
+/** グリッド境界内で1タイル分移動。範囲外には出ない。 */
+export function moveGridPosition(
+  pos: GridPosition,
+  direction: GridDirection,
+  cols: number,
+  rows: number
+): GridPosition {
+  let col = pos.col;
+  let row = pos.row;
+  if (direction === "n") row = Math.max(0, row - 1);
+  else if (direction === "s") row = Math.min(rows - 1, row + 1);
+  else if (direction === "e") col = Math.min(cols - 1, col + 1);
+  else if (direction === "w") col = Math.max(0, col - 1);
+  return { col, row };
+}
+
+// ---------------------------------------------------------------------------
 // 魔法システムの型定義
 // ---------------------------------------------------------------------------
 

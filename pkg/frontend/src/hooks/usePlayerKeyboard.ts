@@ -1,7 +1,8 @@
 import { useRef, useEffect, useCallback } from "react";
 import { PLAYER } from "@/config/constants";
 
-const PLAYER_KEY_CODES: readonly string[] = Object.values(PLAYER.keys);
+/** WASD + Space のキーコード一覧（他モジュールから参照用） */
+export const PLAYER_KEY_CODES: readonly string[] = Object.values(PLAYER.keys);
 
 export interface MoveState {
   forward: boolean;
