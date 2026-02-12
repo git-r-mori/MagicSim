@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { moveGridPosition, type GridDirection } from "@magicsim/core";
-import { GRID, PLAYER } from "@/config/constants";
+import { moveGridPosition, isTileBlocked, type GridDirection } from "@magicsim/core";
+import { GRID, MAP, PLAYER } from "@/config/constants";
 import { PLAYER_KEY_CODES } from "./usePlayerKeyboard";
 
 const KEY_TO_DIRECTION: Record<string, GridDirection> = {
@@ -17,6 +17,7 @@ export interface PlayerPosition {
 
 /**
  * プレイヤー位置を管理。WASD キー押下（リピートなし）でタイル単位に移動。
+ * 障害物（木箱）タイルには侵入しない。
  */
 export function usePlayerMovement(): PlayerPosition {
   const [position, setPosition] = useState<PlayerPosition>({
@@ -30,7 +31,11 @@ export function usePlayerMovement(): PlayerPosition {
     if (!direction) return;
 
     e.preventDefault();
-    setPosition((prev) => moveGridPosition(prev, direction, GRID.cols, GRID.rows));
+    setPosition((prev) => {
+      const next = moveGridPosition(prev, direction, GRID.cols, GRID.rows);
+      if (isTileBlocked(next, MAP.cratePositions)) return prev;
+      return next;
+    });
   }, []);
 
   useEffect(() => {

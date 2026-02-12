@@ -4,6 +4,7 @@ import {
   WaterMagicSystem,
   MagicFactory,
   moveGridPosition,
+  isTileBlocked,
   type StatusEffect,
   type MagicType,
 } from "./index";
@@ -154,5 +155,26 @@ describe("moveGridPosition", () => {
       col: 7,
       row: 7,
     });
+  });
+});
+
+describe("isTileBlocked", () => {
+  const blocked = [
+    { col: 2, row: 3 },
+    { col: 5, row: 5 },
+  ];
+
+  it("ブロック済み座標なら true", () => {
+    expect(isTileBlocked({ col: 2, row: 3 }, blocked)).toBe(true);
+    expect(isTileBlocked({ col: 5, row: 5 }, blocked)).toBe(true);
+  });
+
+  it("空き座標なら false", () => {
+    expect(isTileBlocked({ col: 0, row: 0 }, blocked)).toBe(false);
+    expect(isTileBlocked({ col: 3, row: 3 }, blocked)).toBe(false);
+  });
+
+  it("空配列なら常に false", () => {
+    expect(isTileBlocked({ col: 2, row: 3 }, [])).toBe(false);
   });
 });

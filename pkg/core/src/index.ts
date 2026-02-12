@@ -32,6 +32,11 @@ export function moveGridPosition(
   return { col, row };
 }
 
+/** 指定座標が障害物タイルに含まれるか */
+export function isTileBlocked(pos: GridPosition, blockedTiles: readonly GridPosition[]): boolean {
+  return blockedTiles.some((b) => b.col === pos.col && b.row === pos.row);
+}
+
 // ---------------------------------------------------------------------------
 // 魔法システムの型定義
 // ---------------------------------------------------------------------------

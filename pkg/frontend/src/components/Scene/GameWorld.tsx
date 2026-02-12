@@ -2,9 +2,23 @@ import * as THREE from "three";
 import { GRID, MAP } from "@/config/constants";
 import { Player } from "./Player";
 
+/** 木箱用の共有ジオメトリ（全箱同一サイズ） */
+const CRATE_BOX = new THREE.BoxGeometry(MAP.crate.size, MAP.crate.height, MAP.crate.size);
+const CRATE_EDGES = new THREE.EdgesGeometry(CRATE_BOX);
+
+/** グリッド座標をワールド座標に変換（タイル中心・Y=0） */
+function gridToWorld(col: number, row: number): [number, number, number] {
+  const cx = (GRID.cols - 1) / 2;
+  const cz = (GRID.rows - 1) / 2;
+  const x = (col - cx) * GRID.tileSize;
+  const z = (row - cz) * GRID.tileSize;
+  return [x, 0, z];
+}
+
 /**
  * 8×8 草原風マップ。
  * タイルごとに色を少し変えて自然な草地表現にする。
+ * 木箱オブジェクトは侵入不可。
  * MeshBasicMaterial で照明不要・確実に可視。
  * プレイヤー（WASD で移動）を配置。
  */
@@ -16,17 +30,13 @@ export function GameWorld() {
     }
   }
 
-  const cx = (GRID.cols - 1) / 2;
-  const cz = (GRID.rows - 1) / 2;
-
   return (
     <group>
       <Player />
       {tiles.map(({ col, row }) => {
         const colorIndex = (row + col) % MAP.grasslandColors.length;
         const color = MAP.grasslandColors[colorIndex];
-        const x = (col - cx) * GRID.tileSize;
-        const z = (row - cz) * GRID.tileSize;
+        const [x, , z] = gridToWorld(col, row);
 
         const size = GRID.tileSize - GRID.tileGap;
         return (
@@ -34,6 +44,20 @@ export function GameWorld() {
             <planeGeometry args={[size, size]} />
             <meshBasicMaterial color={color} side={THREE.DoubleSide} />
           </mesh>
+        );
+      })}
+      {MAP.cratePositions.map(({ col, row }) => {
+        const [x, , z] = gridToWorld(col, row);
+        const { bodyColor, edgeColor, height } = MAP.crate;
+        return (
+          <group key={`crate-${col}-${row}`} position={[x, height / 2, z]}>
+            <mesh geometry={CRATE_BOX}>
+              <meshBasicMaterial color={bodyColor} />
+            </mesh>
+            <lineSegments geometry={CRATE_EDGES}>
+              <lineBasicMaterial color={edgeColor} />
+            </lineSegments>
+          </group>
         );
       })}
     </group>

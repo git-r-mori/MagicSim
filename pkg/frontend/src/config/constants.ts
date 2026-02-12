@@ -54,6 +54,21 @@ export const GRID = {
 
 /** マップ・タイル色（草原風） */
 export const MAP = {
+  /** 障害物（木箱）の配置。これらのタイルには侵入不可 */
+  cratePositions: [
+    { col: 1, row: 1 },
+    { col: 6, row: 1 },
+    { col: 4, row: 3 }, // 初期位置の東隣（侵入テスト用）
+    { col: 2, row: 5 },
+    { col: 5, row: 6 },
+  ] as const,
+  /** 木箱の見た目 */
+  crate: {
+    bodyColor: "#8b6914",
+    edgeColor: "#5c4710",
+    height: 0.8,
+    size: 0.7,
+  } as const,
   /** 草原タイルの色（軽いバリエーションで自然な感じに） */
   grasslandColors: [
     "#4a7c59", // 濃いめの緑

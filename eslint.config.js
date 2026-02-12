@@ -41,6 +41,7 @@ export default tseslint.config(
           ignore: [
             "attach",
             "args",
+            "geometry",
             "position",
             "rotation",
             "castShadow",
