@@ -37,6 +37,28 @@ export function isTileBlocked(pos: GridPosition, blockedTiles: readonly GridPosi
   return blockedTiles.some((b) => b.col === pos.col && b.row === pos.row);
 }
 
+/**
+ * 炎魔法弾の着弾位置を算出。
+ * 発射位置から指定方向へ進み、木箱・境界に当たるか maxTiles に達するまで進む。
+ */
+export function getFireProjectileEndPosition(
+  start: GridPosition,
+  direction: GridDirection,
+  blockedTiles: readonly GridPosition[],
+  cols: number,
+  rows: number,
+  maxTiles: number
+): GridPosition {
+  let current = { ...start };
+  for (let step = 0; step < maxTiles; step++) {
+    const next = moveGridPosition(current, direction, cols, rows);
+    if (next.col === current.col && next.row === current.row) return current;
+    if (isTileBlocked(next, blockedTiles)) return current;
+    current = next;
+  }
+  return current;
+}
+
 /** tryMoveWithPush の戻り値 */
 export interface TryMoveResult {
   success: boolean;

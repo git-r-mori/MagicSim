@@ -31,7 +31,7 @@ function App() {
         }}
       >
         <div>WASD: 移動</div>
-        <div>タイルクリック: 炎魔法（準備中）</div>
+        <div>左クリック: 炎魔法（前方に発射）</div>
       </div>
     </div>
   );

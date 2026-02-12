@@ -1,6 +1,8 @@
+import { useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
 import { CANVAS, CAMERA, SCENE_ENV, LIGHTS } from "@/config/constants";
+import { dispatchFireRequest } from "@/hooks/useFireMagic";
 import { GameWorld } from "./GameWorld";
 
 /** 見下ろしカメラを (0,0,0) に向ける */
@@ -18,8 +20,16 @@ function CameraController() {
 }
 
 export function Scene() {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (e.button === 0) {
+      e.preventDefault();
+      dispatchFireRequest();
+    }
+  }, []);
+
   return (
     <div
+      onPointerDown={handlePointerDown}
       style={{
         position: "absolute",
         inset: 0,

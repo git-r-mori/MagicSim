@@ -6,6 +6,7 @@ import {
   moveGridPosition,
   isTileBlocked,
   tryMoveWithPush,
+  getFireProjectileEndPosition,
   type StatusEffect,
   type MagicType,
 } from "./index";
@@ -177,6 +178,70 @@ describe("isTileBlocked", () => {
 
   it("空配列なら常に false", () => {
     expect(isTileBlocked({ col: 2, row: 3 }, [])).toBe(false);
+  });
+});
+
+describe("getFireProjectileEndPosition", () => {
+  const COLS = 8;
+  const ROWS = 8;
+  const MAX_TILES = 4;
+
+  it("空きタイルのみの場合 maxTiles まで進む", () => {
+    const crates: { col: number; row: number }[] = [];
+    const end = getFireProjectileEndPosition(
+      { col: 3, row: 3 },
+      "n",
+      crates,
+      COLS,
+      ROWS,
+      MAX_TILES
+    );
+    expect(end).toEqual({ col: 3, row: 0 });
+  });
+
+  it("木箱に当たるとその手前で止まる", () => {
+    const crates = [{ col: 3, row: 1 }];
+    const end = getFireProjectileEndPosition(
+      { col: 3, row: 3 },
+      "n",
+      crates,
+      COLS,
+      ROWS,
+      MAX_TILES
+    );
+    expect(end).toEqual({ col: 3, row: 2 });
+  });
+
+  it("直進方向の1タイル先に木箱がある場合は発射位置のまま", () => {
+    const crates = [{ col: 3, row: 2 }];
+    const end = getFireProjectileEndPosition(
+      { col: 3, row: 3 },
+      "n",
+      crates,
+      COLS,
+      ROWS,
+      MAX_TILES
+    );
+    expect(end).toEqual({ col: 3, row: 3 });
+  });
+
+  it("境界で止まる", () => {
+    const crates: { col: number; row: number }[] = [];
+    const end = getFireProjectileEndPosition(
+      { col: 0, row: 2 },
+      "w",
+      crates,
+      COLS,
+      ROWS,
+      MAX_TILES
+    );
+    expect(end).toEqual({ col: 0, row: 2 });
+  });
+
+  it("maxTiles が 0 なら発射位置のまま", () => {
+    const crates: { col: number; row: number }[] = [];
+    const end = getFireProjectileEndPosition({ col: 4, row: 4 }, "e", crates, COLS, ROWS, 0);
+    expect(end).toEqual({ col: 4, row: 4 });
   });
 });
 

@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { GRID, MAP } from "@/config/constants";
+import { useFireMagic } from "@/hooks/useFireMagic";
 import { usePlayerMovement } from "@/hooks/usePlayerMovement";
+import { FireProjectile } from "./FireProjectile";
 import { Player } from "./Player";
 
 /** 木箱用の共有ジオメトリ（全箱同一サイズ） */
@@ -23,7 +25,13 @@ function gridToWorld(col: number, row: number): [number, number, number] {
  * プレイヤー（WASD で移動）を配置。
  */
 export function GameWorld() {
-  const { displayPosition, displayRotationY, displayCratePositions } = usePlayerMovement();
+  const movement = usePlayerMovement();
+  const { displayPosition, displayRotationY, displayCratePositions } = movement;
+  const { projectiles } = useFireMagic(() => ({
+    position: movement.position,
+    facing: movement.facing,
+    cratePositions: movement.cratePositions,
+  }));
 
   const tiles: { col: number; row: number }[] = [];
   for (let row = 0; row < GRID.rows; row++) {
@@ -35,6 +43,9 @@ export function GameWorld() {
   return (
     <group>
       <Player position={displayPosition} rotationY={displayRotationY} />
+      {projectiles.map((p) => (
+        <FireProjectile key={p.id} state={p} />
+      ))}
       {tiles.map(({ col, row }) => {
         const colorIndex = (row + col) % MAP.grasslandColors.length;
         const color = MAP.grasslandColors[colorIndex];

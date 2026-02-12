@@ -118,6 +118,18 @@ export const UI = {
   },
 } as const;
 
+/** 炎魔法（左クリックで発射） */
+export const FIRE_MAGIC = {
+  /** 最大飛行タイル数 */
+  maxTiles: 4,
+  /** 発射〜消失までのアニメーション時間（ms） */
+  durationMs: 400,
+  /** 炎弾の色 */
+  color: "#ff6600",
+  /** 炎弾の半径（ワールド単位） */
+  radius: 0.2,
+} as const;
+
 /** デバッグウィンドウ */
 export const DEBUG_WINDOW = {
   /** 画面右端に配置 */
