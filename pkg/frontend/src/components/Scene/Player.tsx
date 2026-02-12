@@ -1,5 +1,5 @@
 import { GRID, PLAYER } from "@/config/constants";
-import { usePlayerMovement } from "@/hooks/usePlayerMovement";
+import type { PlayerPosition } from "@/hooks/usePlayerMovement";
 
 /** グリッド座標をワールド座標に変換（タイル中心） */
 function gridToWorld(col: number, row: number): [number, number, number] {
@@ -11,9 +11,9 @@ function gridToWorld(col: number, row: number): [number, number, number] {
   return [x, y, z];
 }
 
-/** プレイヤーキャラクタ。WASD でタイル単位に移動。 */
-export function Player() {
-  const { col, row } = usePlayerMovement();
+/** プレイヤーキャラクタ。WASD でタイル単位に移動。木箱を押して動かせる。 */
+export function Player({ position }: { position: PlayerPosition }) {
+  const { col, row } = position;
   const [x, y, z] = gridToWorld(col, row);
 
   const size = 0.4; // タイル内に収まるサイズ

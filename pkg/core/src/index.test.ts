@@ -5,6 +5,7 @@ import {
   MagicFactory,
   moveGridPosition,
   isTileBlocked,
+  tryMoveWithPush,
   type StatusEffect,
   type MagicType,
 } from "./index";
@@ -176,5 +177,45 @@ describe("isTileBlocked", () => {
 
   it("空配列なら常に false", () => {
     expect(isTileBlocked({ col: 2, row: 3 }, [])).toBe(false);
+  });
+});
+
+describe("tryMoveWithPush", () => {
+  const COLS = 8;
+  const ROWS = 8;
+
+  it("空きタイルへはプレイヤーのみ移動し、箱は変わらない", () => {
+    const crates = [{ col: 2, row: 2 }];
+    const result = tryMoveWithPush({ col: 3, row: 3 }, "n", crates, COLS, ROWS);
+    expect(result.success).toBe(true);
+    expect(result.newPlayerPos).toEqual({ col: 3, row: 2 });
+    expect(result.newCratePositions).toEqual(crates);
+  });
+
+  it("木箱を押せる（箱が有効な隣タイルへ移動）", () => {
+    const crates = [{ col: 4, row: 3 }];
+    const result = tryMoveWithPush({ col: 3, row: 3 }, "e", crates, COLS, ROWS);
+    expect(result.success).toBe(true);
+    expect(result.newPlayerPos).toEqual({ col: 4, row: 3 });
+    expect(result.newCratePositions).toEqual([{ col: 5, row: 3 }]);
+  });
+
+  it("木箱が端にある場合は押せない", () => {
+    const crates = [{ col: 0, row: 3 }];
+    const result = tryMoveWithPush({ col: 1, row: 3 }, "w", crates, COLS, ROWS);
+    expect(result.success).toBe(false);
+    expect(result.newPlayerPos).toEqual({ col: 1, row: 3 });
+    expect(result.newCratePositions).toEqual(crates);
+  });
+
+  it("木箱の向こうに別の箱がある場合は押せない", () => {
+    const crates = [
+      { col: 4, row: 3 },
+      { col: 5, row: 3 },
+    ];
+    const result = tryMoveWithPush({ col: 3, row: 3 }, "e", crates, COLS, ROWS);
+    expect(result.success).toBe(false);
+    expect(result.newPlayerPos).toEqual({ col: 3, row: 3 });
+    expect(result.newCratePositions).toEqual(crates);
   });
 });

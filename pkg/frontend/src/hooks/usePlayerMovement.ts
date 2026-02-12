@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { moveGridPosition, isTileBlocked, type GridDirection } from "@magicsim/core";
+import { tryMoveWithPush, type GridDirection } from "@magicsim/core";
 import { GRID, MAP, PLAYER } from "@/config/constants";
 import { PLAYER_KEY_CODES } from "./usePlayerKeyboard";
 
@@ -15,14 +15,29 @@ export interface PlayerPosition {
   row: number;
 }
 
+export interface CratePosition {
+  col: number;
+  row: number;
+}
+
+export interface PlayerMovementState {
+  position: PlayerPosition;
+  cratePositions: CratePosition[];
+}
+
+const INITIAL_CRATE_POSITIONS: CratePosition[] = MAP.cratePositions.map((p) => ({ ...p }));
+
 /**
- * プレイヤー位置を管理。WASD キー押下（リピートなし）でタイル単位に移動。
- * 障害物（木箱）タイルには侵入しない。
+ * プレイヤー位置と木箱配置を管理。WASD でタイル単位に移動。
+ * 木箱タイルに進入する場合、押せるならプレイヤーと箱を同時移動。
  */
-export function usePlayerMovement(): PlayerPosition {
-  const [position, setPosition] = useState<PlayerPosition>({
-    col: PLAYER.initialCol,
-    row: PLAYER.initialRow,
+export function usePlayerMovement(): PlayerMovementState {
+  const [state, setState] = useState<PlayerMovementState>({
+    position: {
+      col: PLAYER.initialCol,
+      row: PLAYER.initialRow,
+    },
+    cratePositions: INITIAL_CRATE_POSITIONS,
   });
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -31,10 +46,19 @@ export function usePlayerMovement(): PlayerPosition {
     if (!direction) return;
 
     e.preventDefault();
-    setPosition((prev) => {
-      const next = moveGridPosition(prev, direction, GRID.cols, GRID.rows);
-      if (isTileBlocked(next, MAP.cratePositions)) return prev;
-      return next;
+    setState((prev) => {
+      const result = tryMoveWithPush(
+        prev.position,
+        direction,
+        prev.cratePositions,
+        GRID.cols,
+        GRID.rows
+      );
+      if (!result.success) return prev;
+      return {
+        position: result.newPlayerPos,
+        cratePositions: result.newCratePositions,
+      };
     });
   }, []);
 
@@ -44,5 +68,5 @@ export function usePlayerMovement(): PlayerPosition {
     return () => window.removeEventListener("keydown", handleKeyDown, capture);
   }, [handleKeyDown]);
 
-  return position;
+  return state;
 }

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GRID, MAP } from "@/config/constants";
+import { usePlayerMovement } from "@/hooks/usePlayerMovement";
 import { Player } from "./Player";
 
 /** 木箱用の共有ジオメトリ（全箱同一サイズ） */
@@ -18,11 +19,12 @@ function gridToWorld(col: number, row: number): [number, number, number] {
 /**
  * 8×8 草原風マップ。
  * タイルごとに色を少し変えて自然な草地表現にする。
- * 木箱オブジェクトは侵入不可。
- * MeshBasicMaterial で照明不要・確実に可視。
+ * 木箱オブジェクトは押して移動可能。侵入不可。
  * プレイヤー（WASD で移動）を配置。
  */
 export function GameWorld() {
+  const { position, cratePositions } = usePlayerMovement();
+
   const tiles: { col: number; row: number }[] = [];
   for (let row = 0; row < GRID.rows; row++) {
     for (let col = 0; col < GRID.cols; col++) {
@@ -32,7 +34,7 @@ export function GameWorld() {
 
   return (
     <group>
-      <Player />
+      <Player position={position} />
       {tiles.map(({ col, row }) => {
         const colorIndex = (row + col) % MAP.grasslandColors.length;
         const color = MAP.grasslandColors[colorIndex];
@@ -46,7 +48,7 @@ export function GameWorld() {
           </mesh>
         );
       })}
-      {MAP.cratePositions.map(({ col, row }) => {
+      {cratePositions.map(({ col, row }) => {
         const [x, , z] = gridToWorld(col, row);
         const { bodyColor, edgeColor, height } = MAP.crate;
         return (

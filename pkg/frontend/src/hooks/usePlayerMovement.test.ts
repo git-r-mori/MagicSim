@@ -6,37 +6,38 @@ import { MAP, PLAYER } from "@/config/constants";
 describe("usePlayerMovement", () => {
   it("初期位置は constants の PLAYER 配置", () => {
     const { result } = renderHook(() => usePlayerMovement());
-    expect(result.current).toEqual({
+    expect(result.current.position).toEqual({
       col: PLAYER.initialCol,
       row: PLAYER.initialRow,
     });
+    expect(result.current.cratePositions).toHaveLength(MAP.cratePositions.length);
   });
 
-  it("障害物タイルへは移動しない（D で東に進もうとして (4,3) がブロック）", () => {
-    const obstacleAt4_3 = MAP.cratePositions.some((p) => p.col === 4 && p.row === 3);
-    if (!obstacleAt4_3) {
+  it("木箱を押せる（D で東の箱 (4,3) を押す）", () => {
+    const crateAt4_3 = MAP.cratePositions.some((p) => p.col === 4 && p.row === 3);
+    if (!crateAt4_3) {
       throw new Error("テスト前提: MAP.cratePositions に (4,3) が含まれていること");
     }
 
     const { result } = renderHook(() => usePlayerMovement());
-    expect(result.current.col).toBe(3);
-    expect(result.current.row).toBe(3);
+    expect(result.current.position).toEqual({ col: 3, row: 3 });
 
     act(() => {
       window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
     });
 
-    expect(result.current.col).toBe(3);
-    expect(result.current.row).toBe(3);
+    expect(result.current.position).toEqual({ col: 4, row: 3 });
+    const pushedCrate = result.current.cratePositions.find((p) => p.col === 5 && p.row === 3);
+    expect(pushedCrate).toBeDefined();
   });
 
   it("空きタイルへは通常通り移動する", () => {
     const { result } = renderHook(() => usePlayerMovement());
-    expect(result.current).toEqual({ col: 3, row: 3 });
+    expect(result.current.position).toEqual({ col: 3, row: 3 });
 
     act(() => {
       window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyW" }));
     });
-    expect(result.current).toEqual({ col: 3, row: 2 });
+    expect(result.current.position).toEqual({ col: 3, row: 2 });
   });
 });

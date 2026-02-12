@@ -37,6 +37,56 @@ export function isTileBlocked(pos: GridPosition, blockedTiles: readonly GridPosi
   return blockedTiles.some((b) => b.col === pos.col && b.row === pos.row);
 }
 
+/** tryMoveWithPush の戻り値 */
+export interface TryMoveResult {
+  success: boolean;
+  newPlayerPos: GridPosition;
+  newCratePositions: GridPosition[];
+}
+
+/**
+ * プレイヤー移動を試行。木箱タイルの場合は押す。
+ * - 次のタイルが空 → プレイヤーのみ移動
+ * - 次のタイルに木箱 → 箱の向こうが有効（枠内かつ他箱なし）ならプレイヤーと箱を同時移動
+ * - 押せない（端・他箱がある）場合は何もせず失敗
+ */
+export function tryMoveWithPush(
+  playerPos: GridPosition,
+  direction: GridDirection,
+  cratePositions: readonly GridPosition[],
+  cols: number,
+  rows: number
+): TryMoveResult {
+  const next = moveGridPosition(playerPos, direction, cols, rows);
+  const crateAtNext = cratePositions.find((c) => c.col === next.col && c.row === next.row);
+
+  if (!crateAtNext) {
+    return {
+      success: true,
+      newPlayerPos: next,
+      newCratePositions: [...cratePositions],
+    };
+  }
+
+  const beyond = moveGridPosition(next, direction, cols, rows);
+  if (beyond.col === next.col && beyond.row === next.row) {
+    return { success: false, newPlayerPos: playerPos, newCratePositions: [...cratePositions] };
+  }
+  const blockedAtBeyond = cratePositions.some((c) => c.col === beyond.col && c.row === beyond.row);
+  if (blockedAtBeyond) {
+    return { success: false, newPlayerPos: playerPos, newCratePositions: [...cratePositions] };
+  }
+
+  const newCratePositions = cratePositions.map((c) =>
+    c.col === next.col && c.row === next.row ? beyond : c
+  );
+  return {
+    success: true,
+    newPlayerPos: next,
+    newCratePositions,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // 魔法システムの型定義
 // ---------------------------------------------------------------------------
