@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { tryMoveWithPush, type GridDirection } from "@magicsim/core";
-import { GRID, MAP, PLAYER } from "@/config/constants";
+import { GRID, MAP, MOVE_ANIMATION, PLAYER } from "@/config/constants";
 import { PLAYER_KEY_CODES } from "./usePlayerKeyboard";
 
 const KEY_TO_DIRECTION: Record<string, GridDirection> = {
@@ -25,13 +25,41 @@ export interface PlayerMovementState {
   cratePositions: CratePosition[];
 }
 
+/** 表示用の補間位置（アニメーション中は col/row が小数になる） */
+export interface DisplayPosition {
+  col: number;
+  row: number;
+}
+
+export interface PlayerMovementDisplayState {
+  displayPosition: DisplayPosition;
+  displayCratePositions: DisplayPosition[];
+}
+
 const INITIAL_CRATE_POSITIONS: CratePosition[] = MAP.cratePositions.map((p) => ({ ...p }));
+
+/** easeOutCubic: 終端で自然に減速 */
+function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
+
+function lerpPosition(
+  from: { col: number; row: number },
+  to: { col: number; row: number },
+  t: number
+): DisplayPosition {
+  return {
+    col: from.col + (to.col - from.col) * t,
+    row: from.row + (to.row - from.row) * t,
+  };
+}
 
 /**
  * プレイヤー位置と木箱配置を管理。WASD でタイル単位に移動。
  * 木箱タイルに進入する場合、押せるならプレイヤーと箱を同時移動。
+ * 表示はスライドアニメーションで補間する。
  */
-export function usePlayerMovement(): PlayerMovementState {
+export function usePlayerMovement(): PlayerMovementState & PlayerMovementDisplayState {
   const [state, setState] = useState<PlayerMovementState>({
     position: {
       col: PLAYER.initialCol,
@@ -39,6 +67,20 @@ export function usePlayerMovement(): PlayerMovementState {
     },
     cratePositions: INITIAL_CRATE_POSITIONS,
   });
+
+  const [display, setDisplay] = useState<PlayerMovementDisplayState>(() => ({
+    displayPosition: { col: PLAYER.initialCol, row: PLAYER.initialRow },
+    displayCratePositions: INITIAL_CRATE_POSITIONS.map((p) => ({ ...p })),
+  }));
+
+  const animRef = useRef<{
+    from: PlayerMovementState;
+    to: PlayerMovementState;
+    startTime: number;
+  } | null>(null);
+
+  const displayRef = useRef(display);
+  displayRef.current = display;
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.repeat || !PLAYER_KEY_CODES.includes(e.code)) return;
@@ -68,5 +110,75 @@ export function usePlayerMovement(): PlayerMovementState {
     return () => window.removeEventListener("keydown", handleKeyDown, capture);
   }, [handleKeyDown]);
 
-  return state;
+  useEffect(() => {
+    const from = displayRef.current;
+    const samePos =
+      state.position.col === from.displayPosition.col &&
+      state.position.row === from.displayPosition.row;
+    const sameCrates =
+      state.cratePositions.length === from.displayCratePositions.length &&
+      state.cratePositions.every(
+        (c, i) =>
+          c.col === from.displayCratePositions[i]?.col &&
+          c.row === from.displayCratePositions[i]?.row
+      );
+    if (samePos && sameCrates) return;
+
+    if (
+      animRef.current &&
+      state.position.col === animRef.current.to.position.col &&
+      state.position.row === animRef.current.to.position.row &&
+      state.cratePositions.length === animRef.current.to.cratePositions.length &&
+      animRef.current.to.cratePositions.every(
+        (c, i) => c.col === state.cratePositions[i]?.col && c.row === state.cratePositions[i]?.row
+      )
+    ) {
+      return;
+    }
+    animRef.current = {
+      from: {
+        position: { ...displayRef.current.displayPosition },
+        cratePositions: displayRef.current.displayCratePositions.map((p) => ({ ...p })),
+      },
+      to: {
+        position: { ...state.position },
+        cratePositions: state.cratePositions.map((p) => ({ ...p })),
+      },
+      startTime: performance.now(),
+    };
+  }, [state]);
+
+  useEffect(() => {
+    let raf: number;
+    const tick = () => {
+      const anim = animRef.current;
+      if (!anim) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+      const elapsed = performance.now() - anim.startTime;
+      const t = Math.min(1, elapsed / MOVE_ANIMATION.durationMs);
+      const eased = easeOutCubic(t);
+
+      setDisplay({
+        displayPosition: lerpPosition(anim.from.position, anim.to.position, eased),
+        displayCratePositions: anim.from.cratePositions.map((c, i) =>
+          lerpPosition(c, anim.to.cratePositions[i] ?? c, eased)
+        ),
+      });
+
+      if (t >= 1) {
+        animRef.current = null;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return {
+    ...state,
+    displayPosition: display.displayPosition,
+    displayCratePositions: display.displayCratePositions,
+  };
 }

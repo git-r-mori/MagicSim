@@ -78,6 +78,11 @@ export const MAP = {
   ] as const,
 } as const;
 
+/** 移動アニメーション（スライド時間 ms） */
+export const MOVE_ANIMATION = {
+  durationMs: 120,
+} as const;
+
 /** プレイヤー（WASD 用キーコード・配置・見た目） */
 export const PLAYER = {
   keys: {

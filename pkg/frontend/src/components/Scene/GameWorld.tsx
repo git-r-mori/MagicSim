@@ -23,7 +23,7 @@ function gridToWorld(col: number, row: number): [number, number, number] {
  * プレイヤー（WASD で移動）を配置。
  */
 export function GameWorld() {
-  const { position, cratePositions } = usePlayerMovement();
+  const { displayPosition, displayCratePositions } = usePlayerMovement();
 
   const tiles: { col: number; row: number }[] = [];
   for (let row = 0; row < GRID.rows; row++) {
@@ -34,7 +34,7 @@ export function GameWorld() {
 
   return (
     <group>
-      <Player position={position} />
+      <Player position={displayPosition} />
       {tiles.map(({ col, row }) => {
         const colorIndex = (row + col) % MAP.grasslandColors.length;
         const color = MAP.grasslandColors[colorIndex];
@@ -48,11 +48,11 @@ export function GameWorld() {
           </mesh>
         );
       })}
-      {cratePositions.map(({ col, row }) => {
+      {displayCratePositions.map(({ col, row }, i) => {
         const [x, , z] = gridToWorld(col, row);
         const { bodyColor, edgeColor, height } = MAP.crate;
         return (
-          <group key={`crate-${col}-${row}`} position={[x, height / 2, z]}>
+          <group key={`crate-${i}`} position={[x, height / 2, z]}>
             <mesh geometry={CRATE_BOX}>
               <meshBasicMaterial color={bodyColor} />
             </mesh>
